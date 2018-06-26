@@ -1,0 +1,16 @@
+{
+  "name": "lambda-serverless",
+  "version": "1.0.0",
+  "description": "book store with serverless and AWS lambda technology",
+  "main": "functions/handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.263.1",
+    "joi": "^13.4.0",
+    "uuid": "^3.2.1"
+  }
+}

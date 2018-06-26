@@ -1,0 +1,82 @@
+
+service: lambda-books
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  iamRoleStatements:
+    - Effect: Allow
+      Action: 
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-east-1:*:*"
+
+functions:
+  homepage:
+    handler: functions/handler.homepage
+    events:
+     - http:
+         path: /
+         method: get
+         cors: true
+  getBooks:
+    handler: functions/handler.getBooks
+    events:
+     - http:
+         path: /getBooks
+         method: get
+         cors: true
+  getBook:
+    handler: functions/handler.getBook
+    events:
+     - http:
+         path: /getBook
+         method: get
+         cors: true
+  addBook:
+    handler: functions/handler.addBook
+    events:
+     - http:
+         path: /addBook
+         method: post
+         cors: true
+  editBook:
+    handler: functions/handler.editBook
+    events:
+     - http:
+         path: /editBook
+         method: post
+         cors: true
+  deleteBook:
+    handler: functions/handler.deleteBook
+    events:
+     - http:
+         path: /deleteBook
+         method: delete
+         cors: true  
+resources:
+  Resources:
+    BooksDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+
