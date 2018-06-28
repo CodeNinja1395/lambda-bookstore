@@ -11,6 +11,10 @@
   "dependencies": {
     "aws-sdk": "^2.263.1",
     "joi": "^13.4.0",
+    "underscore": "^1.9.1",
     "uuid": "^3.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.0.1"
   }
 }

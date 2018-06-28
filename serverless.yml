@@ -6,6 +6,8 @@ frameworkVersion: ">=1.1.0 <2.0.0"
 provider:
   name: aws
   runtime: nodejs6.10
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action: 
@@ -30,35 +32,35 @@ functions:
     handler: functions/handler.getBooks
     events:
      - http:
-         path: /getBooks
+         path: /books
          method: get
          cors: true
   getBook:
     handler: functions/handler.getBook
     events:
      - http:
-         path: /getBook
+         path: /book/{id}
          method: get
          cors: true
   addBook:
     handler: functions/handler.addBook
     events:
      - http:
-         path: /addBook
+         path: /book
          method: post
          cors: true
   editBook:
     handler: functions/handler.editBook
     events:
      - http:
-         path: /editBook
+         path: /book/{id}
          method: post
          cors: true
   deleteBook:
     handler: functions/handler.deleteBook
     events:
      - http:
-         path: /deleteBook
+         path: /book/{id}
          method: delete
          cors: true  
 resources:
@@ -78,5 +80,6 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
 
 
