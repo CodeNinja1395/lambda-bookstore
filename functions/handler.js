@@ -2,10 +2,11 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid/v4');
 //const _ = require('underscore');
-const { validateReq, validateOpt } = require('../model/validate');
+const { validateReq, validateOpt } = require('../lib/validate');
 const config = require('../config/config');
 
-const dbClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
+
+const dbClient = require('../lib/dynamodb');
 
 module.exports.homepage = (event, context, callback) => {
     const response = {
@@ -32,6 +33,7 @@ module.exports.getBook = (event, context, callback) => {
                 statusCode: 404,
                 body: JSON.stringify(err)
             };
+
             callback(null, response);
         }
 
@@ -63,6 +65,7 @@ module.exports.getBooks = (event, context, callback) => {
         FilterExpression: 'isDeleted = :is_deleted',
         ExpressionAttributeValues: {':is_deleted' : false}
     };
+
     dbClient.scan(params, (err, data) => {
         if (err) {
             const response = {
@@ -76,7 +79,8 @@ module.exports.getBooks = (event, context, callback) => {
             
             callback(null, response);
         }
-        if(!data.Items) {
+
+        if (!data.Items) {
             const response = {
                 statusCode: 200,
                 body: JSON.stringify('Table is empty')
@@ -103,42 +107,63 @@ module.exports.addBook = (event, context, callback) => {
         added: new Date(Date.now()).toString(),
         isDeleted: false
     };  
-    validateReq(book, (err, valid) => {
-        if(err) {
+
+    validateReq(book)
+        .then((valid) => {
+            console.log(valid);            
+            return {
+                Item: valid,
+                TableName: process.env.DYNAMODB_TABLE    
+            };
+        })
+        .then((params) => {
+            dbClient.put
+        })
+        .catch((err) => {
             const response = {
                 statusCode: err.statusCode,
                 body: JSON.stringify(err)
             };
 
             callback(null, response); 
-        }
-        const params = {
-            Item: valid,
-            TableName: process.env.DYNAMODB_TABLE    
-        };
+        });
 
-        dbClient.put(params, (err, data) => {
-            if (err) {
-                const response = {
-                    statusCode: err.statusCode,
-                    body: JSON.stringify(err)
-                };
-                callback(null, response);
-            } 
-            const response = {
-                statusCode: 200,
-                body: JSON.stringify(data)
-            };
+    // validateReq(book, (err, valid) => {
+    //     if (err) {
+    //         const response = {
+    //             statusCode: err.statusCode,
+    //             body: JSON.stringify(err)
+    //         };
 
-            callback(null, response);        
-        }); 
-    });  
+    //         callback(null, response); 
+    //     }
+    //     const params = {
+    //         Item: valid,
+    //         TableName: process.env.DYNAMODB_TABLE    
+    //     };
+
+    //     dbClient.put(params, (err, data) => {
+    //         if (err) {
+    //             const response = {
+    //                 statusCode: err.statusCode,
+    //                 body: JSON.stringify(err)
+    //             };
+    //             callback(null, response);
+    //         } 
+    //         const response = {
+    //             statusCode: 200,
+    //             body: JSON.stringify(data)
+    //         };
+
+    //         callback(null, response);        
+    //     }); 
+    // });  
 };
 
 module.exports.editBook = (event, context, callback) => {
     const data = JSON.parse(event.body);
     validateOpt(data, (err, valid) => {
-        if(err) {
+        if (err) {
             const response = {
                 statusCode: 200,
                 body: JSON.stringify({
@@ -156,12 +181,18 @@ module.exports.editBook = (event, context, callback) => {
             AttributeUpdates: {}
         };
 
-        Object.keys(valid).forEach((prop) => {
-            params.AttributeUpdates[prop] = {
+        if (valid.title) {
+            params.AttributeUpdates.title = {
                 Action: 'PUT',  
-                Value: valid[prop]
-            };       
-        });
+                Value: valid.title
+            };
+        }
+        if (valid.author) {
+            params.AttributeUpdates.author = {
+                Action: 'PUT',  
+                Value: valid.author
+            };
+        }
         
         dbClient.update(params, (err, data) => {
             if(err) {
@@ -183,9 +214,7 @@ module.exports.editBook = (event, context, callback) => {
 };
 
 module.exports.deleteBook = (event, context, callback) => {
-    const data = JSON.parse(event.body);  
-    console.log(data);
-    
+    const data = JSON.parse(event.body);   
     const params = {
         TableName : process.env.DYNAMODB_TABLE,
         Key: {
@@ -213,13 +242,10 @@ module.exports.deleteBook = (event, context, callback) => {
             callback(null, response);
         });
     } else {
-        console.log(params);
-        
         params.AttributeUpdates.isDeleted = {
             Action: 'PUT',
             Value: true
         };
-        console.log(params);
 
         dbClient.update(params, (err, data) => {
             if (err) {
