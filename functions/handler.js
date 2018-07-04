@@ -37,8 +37,8 @@ module.exports.getBook = (event, context, callback) => {
                 };
     
                 callback(null, response);
-            } 
-            
+            }  
+                   
             const response = {
                 statusCode: 200,
                 body: JSON.stringify(data.Item)
@@ -73,7 +73,7 @@ module.exports.getBooks = (event, context, callback) => {
     
                 callback(null, response);
             }
-    
+
             const response = {
                 statusCode: 200,
                 body: JSON.stringify(data.Items)
@@ -103,12 +103,10 @@ module.exports.addBook = (event, context, callback) => {
 
     validateReq(book)
         .then((valid) => {           
-            return {
+            const params = {
                 Item: valid,
                 TableName: process.env.DYNAMODB_TABLE    
             };
-        })
-        .then((params) => {      
             return docClient.put(params);
         })
         .then((book) => {       
@@ -153,9 +151,6 @@ module.exports.editBook = (event, context, callback) => {
                     Value: valid.author
                 };
             }
-            return params;
-        })
-        .then((params) => {
             return docClient.update(params);
         })
         .then((book) => {
