@@ -184,8 +184,7 @@ module.exports.editBook = (event, context, callback) => {
 
 module.exports.deleteBook = (event, context, callback) => {
     const data = JSON.parse(event.body);  
-    console.log(data);
-    
+
     const params = {
         TableName : process.env.DYNAMODB_TABLE,
         Key: {
@@ -213,13 +212,10 @@ module.exports.deleteBook = (event, context, callback) => {
             callback(null, response);
         });
     } else {
-        console.log(params);
-        
         params.AttributeUpdates.isDeleted = {
             Action: 'PUT',
             Value: true
         };
-        console.log(params);
 
         dbClient.update(params, (err, data) => {
             if (err) {
